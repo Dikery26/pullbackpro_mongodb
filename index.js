@@ -15,7 +15,7 @@ app.use(cors({
 }));
 
 // Connect to MongoDB using Mongoose
-mongoose.connect(MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(MONGO_URL)
   .then(() => {
     console.log('Connected to MongoDB');
     app.listen(port, () => {
@@ -43,21 +43,6 @@ app.get('/getContents', async (req, res) => {
     res.status(500).send('Error fetching contents');
   }
 });
-
-app.get('/insertTestData', async (req, res) => {
-    try {
-      const testData = new Content({
-        paragraph: 'This is a test paragraph.',
-        imgurl: 'https://images.pexels.com/photos/27744211/pexels-photo-27744211/free-photo-of-model-in-white-shirt-posing-on-steps.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
-      });
-      await testData.save();
-      res.send('Test data inserted');
-    } catch (error) {
-      console.error('Error inserting test data:', error);
-      res.status(500).send('Error inserting test data');
-    }
-  });
-  
 
 // Optional: Add a route for the root to test if the server is running
 app.get('/', (req, res) => {
