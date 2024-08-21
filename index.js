@@ -1,7 +1,7 @@
+import cors from 'cors';
+import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import cors from 'cors';
 
 dotenv.config();
 
@@ -24,19 +24,51 @@ mongoose.connect(MONGO_URL)
   })
   .catch(error => console.error('Error connecting to MongoDB:', error));
 
-// Define a Mongoose schema for the content collection
-const contentSchema = new mongoose.Schema({
-  paragraph: String,
-  imgurl: String
+// Define a Mongoose schema for the email data
+const emailSchema = new mongoose.Schema({
+  subject: String,
+  body: String,
+  attachments: [
+    {
+      filename: String,
+      mimeType: String,
+      data: Buffer
+    }
+  ]
 });
 
-// Create a Mongoose model for the content collection
-const Content = mongoose.model('Content', contentSchema);
+// Create Mongoose models for different alert types
+const AllInOneAlerts = mongoose.model('All-in-One_Alerts', emailSchema);
+const CryptoAlerts = mongoose.model('Crypto_Alerts', emailSchema);
+const LSE_NSE_BSEAlerts = mongoose.model('LSE/NSE/BSE_Alerts', emailSchema);
+const USEquitiesAlerts = mongoose.model('US-Equities_Alerts', emailSchema);
 
-// Route to retrieve all documents from the content collection
-app.get('/getContents', async (req, res) => {
+// Route to retrieve all documents from a specific collection
+app.get('/getContents/:collectionName', async (req, res) => {
+  const { collectionName } = req.params;
+
+  let Model;
+  switch (collectionName) {
+    case 'All-in-One_Alerts':
+      Model = AllInOneAlerts;
+      break;
+    case 'Crypto_Alerts':
+      Model = CryptoAlerts;
+      break;
+    case 'LSE/NSE/BSE_Alerts':
+      Model = LSE_NSE_BSEAlerts;
+      break;
+    case 'US-Equities_Alerts':
+      Model = USEquitiesAlerts;
+      break;
+    default:
+      return res.status(400).send('Invalid collection name');
+  }
+
   try {
-    const contents = await Content.find(); // Fetch all documents from the content collection
+    console.log(`Fetching documents from collection: ${collectionName}`);
+    const contents = await Model.find(); // Fetch all documents from the specified collection
+    console.log(`Found ${contents.length} documents`);
     res.json(contents); // Send the fetched documents as JSON response
   } catch (error) {
     console.error('Error fetching contents:', error);
